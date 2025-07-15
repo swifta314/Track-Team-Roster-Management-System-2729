@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+} 
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Dark Mode Styles */
+.dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+/* Compact Mode Styles */
+.compact .p-6 {
+  @apply p-4;
+}
+
+.compact .gap-6 {
+  @apply gap-3;
+}
+
+.compact .rounded-xl {
+  @apply rounded-lg;
+}
+
+.compact .text-3xl {
+  @apply text-2xl;
+}
+
+.compact .text-xl {
+  @apply text-lg;
+}
+
+.compact .text-lg {
+  @apply text-base;
+}
+
+.compact .mb-6 {
+  @apply mb-3;
+}
+
+.compact .space-y-6 {
+  @apply space-y-3;
+}
+
+.compact .h-\[400px\] {
+  @apply h-\[300px\];
+}
+
+.compact .h-\[300px\] {
+  @apply h-\[250px\];
+}
+
+/* Transition for theme switching */
+body, .dark, .compact {
+  transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+}
