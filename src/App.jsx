@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
@@ -27,66 +27,49 @@ function App() {
   const [tierCriteria, setTierCriteria] = useState(initialTierCriteria);
   const [recruitingNeeds, setRecruitingNeeds] = useState(initialRecruitingNeeds);
 
-  // Debug logging for Analytics
-  console.log("App State for Analytics:", {
-    athleteCount: athletes.length,
-    hasTeamComposition: Boolean(Object.keys(teamComposition).length),
-    hasScholarshipLimits: Boolean(Object.keys(scholarshipLimits).length),
-    hasRecruitingNeeds: Boolean(Object.keys(recruitingNeeds).length),
-    globalGenderFilter
-  });
+  const renderContent = useMemo(() => {
+    const commonProps = {
+      athletes,
+      globalGenderFilter,
+      setGlobalGenderFilter
+    };
 
-  const renderContent = () => {
-    console.log("Active tab:", activeTab);
     switch (activeTab) {
       case 'dashboard':
         return (
           <Dashboard
-            athletes={athletes}
+            {...commonProps}
             teamComposition={teamComposition}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
       case 'athletes':
         return (
           <AthleteBoard
-            athletes={athletes}
+            {...commonProps}
             setAthletes={setAthletes}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
       case 'analytics':
-        console.log("Rendering Analytics component with props:", {
-          athletes: athletes.length,
-          teamComposition: Object.keys(teamComposition),
-          scholarshipLimits: Object.keys(scholarshipLimits),
-          recruitingNeeds: Object.keys(recruitingNeeds),
-          globalGenderFilter
-        });
         return (
           <Analytics
-            athletes={athletes}
+            {...commonProps}
             teamComposition={teamComposition}
             scholarshipLimits={scholarshipLimits}
             recruitingNeeds={recruitingNeeds}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
       case 'reports':
         return (
           <ScholarshipReport
-            athletes={athletes}
+            {...commonProps}
             scholarshipLimits={scholarshipLimits}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
       case 'settings':
         return (
           <Settings
+            {...commonProps}
+            setAthletes={setAthletes}
             teamComposition={teamComposition}
             setTeamComposition={setTeamComposition}
             scholarshipLimits={scholarshipLimits}
@@ -95,23 +78,17 @@ function App() {
             setTierCriteria={setTierCriteria}
             recruitingNeeds={recruitingNeeds}
             setRecruitingNeeds={setRecruitingNeeds}
-            athletes={athletes}
-            setAthletes={setAthletes}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
       default:
         return (
           <Dashboard
-            athletes={athletes}
+            {...commonProps}
             teamComposition={teamComposition}
-            globalGenderFilter={globalGenderFilter}
-            setGlobalGenderFilter={setGlobalGenderFilter}
           />
         );
     }
-  };
+  }, [activeTab, athletes, teamComposition, scholarshipLimits, tierCriteria, recruitingNeeds, globalGenderFilter, setGlobalGenderFilter, setAthletes, setTeamComposition, setScholarshipLimits, setTierCriteria, setRecruitingNeeds]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,7 +105,7 @@ function App() {
           transition={{ duration: 0.3 }}
           className="max-w-7xl mx-auto"
         >
-          {renderContent()}
+          {renderContent}
         </motion.main>
       </AnimatePresence>
     </div>

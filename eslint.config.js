@@ -30,10 +30,11 @@ export default [
     rules: {
       'no-undef': 'error', 
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'off',
-      'no-unused-vars': 'off',
-      'no-case-declarations': 'off'
+      'no-unused-vars': 'warn',
+      'no-case-declarations': 'off',
+      'no-console': 'warn'
     },
   }
 ];

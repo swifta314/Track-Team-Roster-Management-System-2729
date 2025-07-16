@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
@@ -15,30 +16,32 @@ const { FiArchive } = FiIcons;
 const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGenderFilter }) => {
   const [includeArchived, setIncludeArchived] = useState(false);
 
-  const filteredAthletes = athletes.filter(athlete => {
-    // Filter by archived status
-    if (!includeArchived && athlete.status === 'archived') return false;
+  const filteredAthletes = useMemo(() => {
+    return athletes.filter(athlete => {
+      // Filter by archived status
+      if (!includeArchived && athlete.status === 'archived') return false;
 
-    // Filter by gender
-    if (globalGenderFilter === 'both') return true;
-    if (globalGenderFilter === 'men') return athlete.gender === 'M';
-    if (globalGenderFilter === 'women') return athlete.gender === 'F';
-    return true;
-  });
+      // Filter by gender
+      if (globalGenderFilter === 'both') return true;
+      if (globalGenderFilter === 'men') return athlete.gender === 'M';
+      if (globalGenderFilter === 'women') return athlete.gender === 'F';
+      return true;
+    });
+  }, [athletes, includeArchived, globalGenderFilter]);
 
-  const getArchivedCount = () => {
+  const archivedCount = useMemo(() => {
     return athletes.filter(athlete => athlete.status === 'archived').length;
-  };
+  }, [athletes]);
 
-  const getActiveCount = () => {
+  const activeCount = useMemo(() => {
     return athletes.filter(athlete => athlete.status !== 'archived').length;
-  };
+  }, [athletes]);
 
-  const getGenderTitle = () => {
+  const genderTitle = useMemo(() => {
     if (globalGenderFilter === 'men') return "Men's Team - ";
     if (globalGenderFilter === 'women') return "Women's Team - ";
     return "";
-  };
+  }, [globalGenderFilter]);
 
   return (
     <div className="p-6 space-y-6">
@@ -50,7 +53,7 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {getGenderTitle()}Ball State Track & Field Dashboard
+              {genderTitle}Ball State Track & Field Dashboard
             </h1>
             <p className="text-gray-600">
               Comprehensive roster and scholarship management
@@ -68,9 +71,9 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
             >
               <SafeIcon icon={FiArchive} className="w-4 h-4" />
               {includeArchived ? 'Exclude Archived' : 'Include Archived'}
-              {!includeArchived && getArchivedCount() > 0 && (
+              {!includeArchived && archivedCount > 0 && (
                 <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs ml-1">
-                  {getArchivedCount()}
+                  {archivedCount}
                 </span>
               )}
             </button>
@@ -84,14 +87,14 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Athletes:</span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {filteredAthletes.length} of {includeArchived ? athletes.length : getActiveCount()}
+                {filteredAthletes.length} of {includeArchived ? athletes.length : activeCount}
               </span>
             </div>
             {includeArchived && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">Including:</span>
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                  {getArchivedCount()} archived
+                  {archivedCount} archived
                 </span>
               </div>
             )}
@@ -115,4 +118,4 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard);
