@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
@@ -10,10 +9,13 @@ import TeamCompositionChart from './TeamCompositionChart';
 import RecruitingNeeds from './RecruitingNeeds';
 import QuickStats from './QuickStats';
 import GenderFilterBadge from './GenderFilterBadge';
+import PerformanceMetrics from './PerformanceMetrics';
+import DataManagement from './DataManagement';
+import AdvancedSearch from './AdvancedSearch';
 
 const { FiArchive } = FiIcons;
 
-const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGenderFilter }) => {
+const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGenderFilter, setAthletes }) => {
   const [includeArchived, setIncludeArchived] = useState(false);
 
   const filteredAthletes = useMemo(() => {
@@ -44,18 +46,18 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
   }, [globalGenderFilter]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-4 md:mb-8"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               {genderTitle}Ball State Track & Field Dashboard
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm md:text-base">
               Comprehensive roster and scholarship management
             </p>
           </div>
@@ -103,6 +105,21 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
       </motion.div>
 
       <QuickStats athletes={filteredAthletes} />
+
+      <PerformanceMetrics 
+        athletes={filteredAthletes}
+        globalGenderFilter={globalGenderFilter}
+      />
+
+      <AdvancedSearch
+        athletes={athletes}
+        onFilteredResults={(results) => console.log("Filtered results:", results)}
+      />
+
+      <DataManagement
+        athletes={athletes}
+        setAthletes={setAthletes}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ScholarshipOverview genderFilter={globalGenderFilter} athletes={filteredAthletes} />

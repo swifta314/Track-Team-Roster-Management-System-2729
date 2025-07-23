@@ -17,10 +17,10 @@ import {
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [athletes, setAthletes] = useState(initialAthletes);
-  
+
   // Global gender filter state
   const [globalGenderFilter, setGlobalGenderFilter] = useState('both'); // 'men', 'women', 'both'
-  
+
   // Settings state
   const [teamComposition, setTeamComposition] = useState(initialTeamComposition);
   const [scholarshipLimits, setScholarshipLimits] = useState(initialScholarshipLimits);
@@ -41,6 +41,7 @@ function App() {
           <Dashboard
             {...commonProps}
             teamComposition={teamComposition}
+            setAthletes={setAthletes}
           />
         );
       case 'athletes':
@@ -86,6 +87,7 @@ function App() {
           <Dashboard
             {...commonProps}
             teamComposition={teamComposition}
+            setAthletes={setAthletes}
           />
         );
     }
