@@ -1,4 +1,3 @@
-
 import { COMMON_STYLES, RISK_LEVELS } from '../common/constants';
 
 export const useCommonStyles = () => {

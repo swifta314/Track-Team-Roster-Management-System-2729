@@ -12,9 +12,9 @@ runButton = "Start Development Server"
 
 [[workflows.workflow]]
 name = "Start Development Server"
-author = "36700329"
+author = 36700329
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = ["npm", "run", "dev"]
+args = "npm run dev"

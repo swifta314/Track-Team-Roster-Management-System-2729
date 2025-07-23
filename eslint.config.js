@@ -25,7 +25,7 @@ export default [
     },
     plugins: {
       'react-hooks': reactHooks,
-      'react-refresh': reactRefresh
+      'react-refresh': reactRefresh,
     },
     rules: {
       'no-undef': 'warn',
@@ -37,6 +37,6 @@ export default [
       'no-console': 'warn',
       'prefer-const': 'warn',
       'no-var': 'error'
-    }
+    },
   }
 ];

@@ -1,4 +1,3 @@
-
 // Common styling classes and constants
 export const COMMON_STYLES = {
   card: "bg-white dark:bg-gray-800 rounded-xl shadow-lg",
