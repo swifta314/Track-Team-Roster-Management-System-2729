@@ -924,17 +924,17 @@ const Settings = ({
                   <input
                     type="number"
                     min="0"
-                    step="1000"
+                    step="100"
                     value={scholarshipBudget.men}
                     onChange={(e) => setScholarshipBudget(prev => ({
                       ...prev,
-                      men: parseInt(e.target.value) || 0
+                      men: Math.max(0, parseInt(e.target.value) || 0)
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  This is your total scholarship budget for men's team
+                  This is your total scholarship budget for men's team (can be set to $0)
                 </p>
               </div>
 
@@ -1030,17 +1030,17 @@ const Settings = ({
                   <input
                     type="number"
                     min="0"
-                    step="1000"
+                    step="100"
                     value={scholarshipBudget.women}
                     onChange={(e) => setScholarshipBudget(prev => ({
                       ...prev,
-                      women: parseInt(e.target.value) || 0
+                      women: Math.max(0, parseInt(e.target.value) || 0)
                     }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                   />
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  This is your total scholarship budget for women's team
+                  This is your total scholarship budget for women's team (can be set to $0)
                 </p>
               </div>
 
