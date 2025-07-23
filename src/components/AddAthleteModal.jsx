@@ -13,18 +13,18 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     gender: 'M',
     year: 'freshman',
     graduationYear: new Date().getFullYear() + 4,
-    
+
     // Contact Info
     email: '',
     phone: '',
     address: '',
-    
+
     // Academic Info
     major: '',
     gpa: '',
     satScore: '',
     actScore: '',
-    
+
     // Athletic Info
     event: '',
     personalBest: '',
@@ -34,7 +34,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     additionalEventTiers: {}, // New: Store tiers for additional events
     highSchool: '',
     eligibilityStatus: 'Eligible',
-    
+
     // Scholarship Info
     scholarshipAmount: 0,
     scholarshipType: 'None',
@@ -42,7 +42,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     scholarshipDuration: '1 year renewable',
     scholarshipOfferStatus: 'No Offer', // New: Track offer status
     scholarshipAccepted: false, // New: Track acceptance
-    
+
     // Status
     status: 'active'
   });
@@ -286,7 +286,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when field is updated
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -323,16 +323,16 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     if (oldEvent && oldEvent !== value) {
       const newAdditionalEventTimes = { ...formData.additionalEventTimes };
       const newAdditionalEventTiers = { ...formData.additionalEventTiers };
-      
+
       if (newAdditionalEventTimes[oldEvent]) {
         newAdditionalEventTimes[value] = newAdditionalEventTimes[oldEvent];
         delete newAdditionalEventTimes[oldEvent];
       }
-      
+
       if (newAdditionalEventTiers[oldEvent]) {
         delete newAdditionalEventTiers[oldEvent];
       }
-      
+
       setFormData(prev => ({
         ...prev,
         additionalEventTimes: newAdditionalEventTimes,
@@ -346,12 +346,12 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     setFormData(prev => {
       const newAdditionalEventTimes = { ...prev.additionalEventTimes };
       const newAdditionalEventTiers = { ...prev.additionalEventTiers };
-      
+
       if (eventToRemove) {
         delete newAdditionalEventTimes[eventToRemove];
         delete newAdditionalEventTiers[eventToRemove];
       }
-      
+
       return {
         ...prev,
         primaryEvents: prev.primaryEvents.filter((_, i) => i !== index),
@@ -795,8 +795,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
   const renderScholarshipInfo = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div><label className="block text-sm font-medium text-gray-700 mb-1">
             Scholarship Offer Status
           </label>
           <select

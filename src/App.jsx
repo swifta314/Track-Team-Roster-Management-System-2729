@@ -27,13 +27,14 @@ function App() {
   const [tierCriteria, setTierCriteria] = useState(initialTierCriteria);
   const [recruitingNeeds, setRecruitingNeeds] = useState(initialRecruitingNeeds);
 
-  const renderContent = useMemo(() => {
-    const commonProps = {
-      athletes,
-      globalGenderFilter,
-      setGlobalGenderFilter
-    };
+  // Memoize common props to prevent unnecessary re-renders
+  const commonProps = useMemo(() => ({
+    athletes,
+    globalGenderFilter,
+    setGlobalGenderFilter
+  }), [athletes, globalGenderFilter, setGlobalGenderFilter]);
 
+  const renderContent = useMemo(() => {
     switch (activeTab) {
       case 'dashboard':
         return (
@@ -88,7 +89,7 @@ function App() {
           />
         );
     }
-  }, [activeTab, athletes, teamComposition, scholarshipLimits, tierCriteria, recruitingNeeds, globalGenderFilter]);
+  }, [activeTab, commonProps, teamComposition, scholarshipLimits, tierCriteria, recruitingNeeds, setAthletes, setTeamComposition, setScholarshipLimits, setTierCriteria, setRecruitingNeeds]);
 
   return (
     <div className="min-h-screen bg-gray-50">
