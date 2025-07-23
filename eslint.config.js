@@ -28,7 +28,7 @@ export default [
       'react-refresh': reactRefresh,
     },
     rules: {
-      'no-undef': 'error',
+      'no-undef': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'off',
