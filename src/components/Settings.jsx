@@ -51,6 +51,18 @@ const Settings = ({
     women: 300000
   });
 
+  // Scholarship value settings
+  const [scholarshipValues, setScholarshipValues] = useState({
+    men: {
+      inState: 25000,
+      outOfState: 45000
+    },
+    women: {
+      inState: 25000,
+      outOfState: 45000
+    }
+  });
+
   // For roster limit validation
   const [rosterLimitError, setRosterLimitError] = useState(null);
 
@@ -1016,6 +1028,44 @@ const Settings = ({
                   </span>
                 </p>
               </div>
+
+              {/* Average Full Scholarship Values */}
+              <div className="border-t border-blue-200 dark:border-blue-700 pt-4 mt-4">
+                <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-3">Average Full Scholarship Value</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">In-State ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={scholarshipValues.men.inState}
+                      onChange={(e) => setScholarshipValues(prev => ({
+                        ...prev,
+                        men: { ...prev.men, inState: Math.max(0, parseInt(e.target.value) || 0) }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Out-of-State ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={scholarshipValues.men.outOfState}
+                      onChange={(e) => setScholarshipValues(prev => ({
+                        ...prev,
+                        men: { ...prev.men, outOfState: Math.max(0, parseInt(e.target.value) || 0) }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  These values represent the cost of a full scholarship for in-state vs out-of-state athletes
+                </p>
+              </div>
             </div>
           )}
 
@@ -1120,6 +1170,44 @@ const Settings = ({
                   <span className="text-xs ml-1">
                     ({(localScholarshipLimits.women.total - localScholarshipLimits.women.allocated).toFixed(1)} NCAA scholarships)
                   </span>
+                </p>
+              </div>
+
+              {/* Average Full Scholarship Values */}
+              <div className="border-t border-pink-200 dark:border-pink-700 pt-4 mt-4">
+                <h5 className="font-medium text-pink-800 dark:text-pink-200 mb-3">Average Full Scholarship Value</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">In-State ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={scholarshipValues.women.inState}
+                      onChange={(e) => setScholarshipValues(prev => ({
+                        ...prev,
+                        women: { ...prev.women, inState: Math.max(0, parseInt(e.target.value) || 0) }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Out-of-State ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={scholarshipValues.women.outOfState}
+                      onChange={(e) => setScholarshipValues(prev => ({
+                        ...prev,
+                        women: { ...prev.women, outOfState: Math.max(0, parseInt(e.target.value) || 0) }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  These values represent the cost of a full scholarship for in-state vs out-of-state athletes
                 </p>
               </div>
             </div>
