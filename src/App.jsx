@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
@@ -88,7 +88,7 @@ function App() {
           />
         );
     }
-  }, [activeTab, athletes, teamComposition, scholarshipLimits, tierCriteria, recruitingNeeds, globalGenderFilter, setGlobalGenderFilter, setAthletes, setTeamComposition, setScholarshipLimits, setTierCriteria, setRecruitingNeeds]);
+  }, [activeTab, athletes, teamComposition, scholarshipLimits, tierCriteria, recruitingNeeds, globalGenderFilter]);
 
   return (
     <div className="min-h-screen bg-gray-50">

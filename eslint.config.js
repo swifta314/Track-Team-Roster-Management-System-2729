@@ -28,13 +28,15 @@ export default [
       'react-refresh': reactRefresh,
     },
     rules: {
-      'no-undef': 'error', 
+      'no-undef': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'off',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
       'no-case-declarations': 'off',
-      'no-console': 'warn'
+      'no-console': 'warn',
+      'prefer-const': 'warn',
+      'no-var': 'error'
     },
   }
 ];
