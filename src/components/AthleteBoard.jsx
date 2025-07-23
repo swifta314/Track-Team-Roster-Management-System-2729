@@ -17,9 +17,8 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
   const [selectedAthlete, setSelectedAthlete] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
-
-  // Delete/Archive modals
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingAthlete, setEditingAthlete] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [archiveConfirmation, setArchiveConfirmation] = useState(null);
 
@@ -82,6 +81,11 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
+    const handleEditAthlete = (athlete) => {
+        setEditingAthlete(athlete);
+        setIsEditModalOpen(true);
+    };
 
   const handleAddAthlete = (newAthlete) => {
     setAthletes(prev => [...prev, newAthlete]);
@@ -242,7 +246,7 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
                     }`}
                   >
                     <div className="space-y-3">
-                      {column.athletes.map((athlete, index) => (
+                      {column.athletes.map((athlete) => (
                         <Draggable
                           key={athlete.id}
                           draggableId={athlete.id}
@@ -261,6 +265,7 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
                               <AthleteCard
                                 athlete={athlete}
                                 onClick={handleAthleteClick}
+                                onEdit={handleEditAthlete}
                                 onDelete={handleDeleteAthlete}
                                 onArchive={handleArchiveAthlete}
                                 showArchived={showArchived}
@@ -290,6 +295,14 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
         onClose={() => setIsAddModalOpen(false)}
         onAddAthlete={handleAddAthlete}
       />
+
+        <AddAthleteModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onAddAthlete={handleAddAthlete}
+            athlete={editingAthlete}
+            isEditing={true}
+        />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

@@ -6,7 +6,7 @@ import { tierCriteria, yearGroups } from '../data/mockData';
 
 const { FiX, FiSave, FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiBookOpen, FiTrendingUp, FiDollarSign, FiMale, FiFemale, FiCheck, FiClock, FiTarget, FiAlertCircle, FiRefreshCw, FiAward } = FiIcons;
 
-const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
+const AddAthleteModal = ({ isOpen, onClose, onAddAthlete, onUpdateAthlete, athlete = null, isEditing = false }) => {
   const [formData, setFormData] = useState({
     // Basic Info
     name: '',
@@ -46,6 +46,86 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
     // Status
     status: 'active'
   });
+
+  // Initialize form data when editing
+  useEffect(() => {
+    if (isEditing && athlete) {
+      const additionalEventTimes = {};
+      const additionalEventTiers = {};
+      
+      // Extract additional events from personal records
+      Object.entries(athlete.athleticPerformance?.personalRecords || {}).forEach(([event, time]) => {
+        if (event !== athlete.event) {
+          additionalEventTimes[event] = time;
+        }
+      });
+
+      // Extract additional event tiers
+      if (athlete.athleticPerformance?.additionalEventTiers) {
+        Object.assign(additionalEventTiers, athlete.athleticPerformance.additionalEventTiers);
+      }
+
+      setFormData({
+        name: athlete.name || '',
+        gender: athlete.gender || 'M',
+        year: athlete.year || 'freshman',
+        graduationYear: athlete.graduationYear || new Date().getFullYear() + 4,
+        email: athlete.contactInfo?.email || '',
+        phone: athlete.contactInfo?.phone || '',
+        address: athlete.contactInfo?.address || '',
+        major: athlete.academics?.major || '',
+        gpa: athlete.gpa || '',
+        satScore: athlete.academics?.satScore || '',
+        actScore: athlete.academics?.actScore || '',
+        event: athlete.event || '',
+        personalBest: athlete.personalBest || '',
+        tier: athlete.tier || 'prospect',
+        primaryEvents: athlete.athleticPerformance?.primaryEvents?.length ? 
+          athlete.athleticPerformance.primaryEvents : [''],
+        additionalEventTimes,
+        additionalEventTiers,
+        highSchool: athlete.highSchool || '',
+        eligibilityStatus: athlete.eligibilityStatus || 'Eligible',
+        scholarshipAmount: athlete.scholarshipAmount || 0,
+        scholarshipType: athlete.scholarshipType || 'None',
+        scholarshipPercentage: athlete.scholarshipPercentage || 0,
+        scholarshipDuration: athlete.scholarshipDuration || '1 year renewable',
+        scholarshipOfferStatus: athlete.scholarshipOfferStatus || athlete.recruitingStatus?.offerStatus || 'No Offer',
+        scholarshipAccepted: athlete.scholarshipAccepted || athlete.recruitingStatus?.commitmentStatus === 'Committed' || false,
+        status: athlete.status || 'active'
+      });
+    } else if (!isEditing) {
+      // Reset form for new athlete
+      setFormData({
+        name: '',
+        gender: 'M',
+        year: 'freshman',
+        graduationYear: new Date().getFullYear() + 4,
+        email: '',
+        phone: '',
+        address: '',
+        major: '',
+        gpa: '',
+        satScore: '',
+        actScore: '',
+        event: '',
+        personalBest: '',
+        tier: 'prospect',
+        primaryEvents: [''],
+        additionalEventTimes: {},
+        additionalEventTiers: {},
+        highSchool: '',
+        eligibilityStatus: 'Eligible',
+        scholarshipAmount: 0,
+        scholarshipType: 'None',
+        scholarshipPercentage: 0,
+        scholarshipDuration: '1 year renewable',
+        scholarshipOfferStatus: 'No Offer',
+        scholarshipAccepted: false,
+        status: 'active'
+      });
+    }
+  }, [isEditing, athlete]);
 
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState('basic');
@@ -135,13 +215,10 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
 
     // Required fields
     if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!formData.event.trim()) newErrors.event = 'Primary event is required';
     if (!formData.personalBest.trim()) newErrors.personalBest = 'Personal best is required';
-    if (!formData.major.trim()) newErrors.major = 'Major is required';
-    if (!formData.highSchool.trim()) newErrors.highSchool = 'High school is required';
 
-    // Email validation
+    // Email validation (only if provided)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -181,18 +258,15 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
       return;
     }
 
-    // Generate unique ID
-    const newId = Date.now().toString();
-
     // Build personal records from primary event and additional events
     const personalRecords = {
       [formData.event]: formData.personalBest,
       ...formData.additionalEventTimes
     };
 
-    // Create new athlete object
-    const newAthlete = {
-      id: newId,
+    // Create athlete object
+    const athleteData = {
+      id: isEditing ? athlete.id : Date.now().toString(),
       name: formData.name,
       gender: formData.gender,
       contactInfo: {
@@ -224,15 +298,23 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
         primaryEvents: formData.primaryEvents.filter(event => event.trim()),
         personalRecords: personalRecords,
         additionalEventTiers: formData.additionalEventTiers,
-        meetResults: [],
-        progression: [],
-        rankings: {
+        meetResults: isEditing ? athlete.athleticPerformance?.meetResults || [] : [],
+        progression: isEditing ? athlete.athleticPerformance?.progression || [] : [],
+        rankings: isEditing ? athlete.athleticPerformance?.rankings || {
+          conference: null,
+          regional: null,
+          national: null
+        } : {
           conference: null,
           regional: null,
           national: null
         }
       },
-      recruitingStatus: {
+      recruitingStatus: isEditing ? {
+        ...athlete.recruitingStatus,
+        offerStatus: formData.scholarshipOfferStatus,
+        commitmentStatus: formData.scholarshipAccepted ? 'Committed' : 'Uncommitted'
+      } : {
         communicationHistory: [],
         visits: {
           official: null,
@@ -244,7 +326,11 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
       }
     };
 
-    onAddAthlete(newAthlete);
+    if (isEditing) {
+      onUpdateAthlete(athleteData);
+    } else {
+      onAddAthlete(athleteData);
+    }
     handleClose();
   };
 
@@ -476,7 +562,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
+            Email
           </label>
           <input
             type="email"
@@ -518,18 +604,15 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          High School *
+          High School
         </label>
         <input
           type="text"
           value={formData.highSchool}
           onChange={(e) => updateFormData('highSchool', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red ${
-            errors.highSchool ? 'border-red-300 bg-red-50' : 'border-gray-300'
-          }`}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
           placeholder="High School Name, City, State"
         />
-        {errors.highSchool && <p className="text-red-500 text-xs mt-1">{errors.highSchool}</p>}
       </div>
     </div>
   );
@@ -539,18 +622,15 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Major *
+            Major
           </label>
           <input
             type="text"
             value={formData.major}
             onChange={(e) => updateFormData('major', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red ${
-              errors.major ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            }`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
             placeholder="e.g., Exercise Science"
           />
-          {errors.major && <p className="text-red-500 text-xs mt-1">{errors.major}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -982,7 +1062,9 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
             {/* Header */}
             <div className="relative p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Add New Athlete</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isEditing ? 'Edit Athlete' : 'Add New Athlete'}
+                </h2>
                 <button
                   onClick={handleClose}
                   className="text-gray-400 hover:text-gray-600"
@@ -1042,7 +1124,7 @@ const AddAthleteModal = ({ isOpen, onClose, onAddAthlete }) => {
                   className="flex items-center gap-2 px-4 py-2 bg-ballstate-red text-white rounded-lg font-medium hover:bg-red-700"
                 >
                   <SafeIcon icon={FiSave} className="w-4 h-4" />
-                  Add Athlete
+                  {isEditing ? 'Update Athlete' : 'Add Athlete'}
                 </button>
               </div>
             </form>
