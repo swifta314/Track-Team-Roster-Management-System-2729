@@ -493,6 +493,106 @@ const Settings = ({
 
   const eventGroupTotals = calculateEventGroupTotals();
 
+  // Apply team focus distribution based on selected focus
+  const applyTeamFocusDistribution = (focus) => {
+    const menTotal = localTeamComposition.genderDistribution.men.total;
+    const womenTotal = localTeamComposition.genderDistribution.women.total;
+
+    // Define distribution percentages for each focus
+    const distributionProfiles = {
+      sprint: {
+        sprints: 0.35,
+        middleDistance: 0.15,
+        distance: 0.10,
+        jumps: 0.15,
+        throws: 0.15,
+        hurdles: 0.10
+      },
+      distance: {
+        sprints: 0.10,
+        middleDistance: 0.20,
+        distance: 0.40,
+        jumps: 0.10,
+        throws: 0.10,
+        hurdles: 0.10
+      },
+      jump: {
+        sprints: 0.20,
+        middleDistance: 0.10,
+        distance: 0.10,
+        jumps: 0.35,
+        throws: 0.15,
+        hurdles: 0.10
+      },
+      throw: {
+        sprints: 0.15,
+        middleDistance: 0.10,
+        distance: 0.10,
+        jumps: 0.15,
+        throws: 0.35,
+        hurdles: 0.15
+      },
+      hurdle: {
+        sprints: 0.25,
+        middleDistance: 0.15,
+        distance: 0.10,
+        jumps: 0.15,
+        throws: 0.10,
+        hurdles: 0.25
+      },
+      balanced: {
+        sprints: 0.20,
+        middleDistance: 0.15,
+        distance: 0.20,
+        jumps: 0.15,
+        throws: 0.15,
+        hurdles: 0.15
+      }
+    };
+
+    const profile = distributionProfiles[focus];
+    if (!profile) return;
+
+    const newEventGroups = {};
+    const eventGroupKeys = Object.keys(localTeamComposition.eventGroups);
+
+    // Calculate target numbers for each event group
+    eventGroupKeys.forEach(key => {
+      const percentage = profile[key] || 0.15; // Default to 15% if not specified
+      const menTarget = Math.round(menTotal * percentage);
+      const womenTarget = Math.round(womenTotal * percentage);
+
+      newEventGroups[key] = {
+        ...localTeamComposition.eventGroups[key],
+        rosterSpots: {
+          men: menTarget,
+          women: womenTarget
+        }
+      };
+    });
+
+    // Adjust for rounding errors to match exact totals
+    const currentMenTotal = Object.values(newEventGroups).reduce((sum, group) => sum + group.rosterSpots.men, 0);
+    const currentWomenTotal = Object.values(newEventGroups).reduce((sum, group) => sum + group.rosterSpots.women, 0);
+
+    const menDiff = menTotal - currentMenTotal;
+    const womenDiff = womenTotal - currentWomenTotal;
+
+    // Apply differences to the first event group that has the highest allocation
+    if (menDiff !== 0 || womenDiff !== 0) {
+      const primaryGroup = Object.keys(profile).reduce((a, b) => profile[a] > profile[b] ? a : b);
+      if (newEventGroups[primaryGroup]) {
+        newEventGroups[primaryGroup].rosterSpots.men += menDiff;
+        newEventGroups[primaryGroup].rosterSpots.women += womenDiff;
+      }
+    }
+
+    setLocalTeamComposition(prev => ({
+      ...prev,
+      eventGroups: newEventGroups
+    }));
+  };
+
   // Filter recruiting needs based on gender filter
   const filterRecruitingNeeds = (needs) => {
     if (globalGenderFilter === 'both') return needs;
@@ -721,42 +821,65 @@ const Settings = ({
                 )}
               </div>
             </div>
-            <button
-              onClick={() => {
-                // Auto-balance roster spots to match team totals
-                const eventGroups = Object.keys(localTeamComposition.eventGroups);
-                const menPerGroup = Math.floor(localTeamComposition.genderDistribution.men.total / eventGroups.length);
-                const womenPerGroup = Math.floor(localTeamComposition.genderDistribution.women.total / eventGroups.length);
-
-                // Distribute evenly with remainder going to first groups
-                let menRemaining = localTeamComposition.genderDistribution.men.total - (menPerGroup * eventGroups.length);
-                let womenRemaining = localTeamComposition.genderDistribution.women.total - (womenPerGroup * eventGroups.length);
-
-                const newEventGroups = {};
-                eventGroups.forEach(key => {
-                  const extraMen = menRemaining > 0 ? 1 : 0;
-                  const extraWomen = womenRemaining > 0 ? 1 : 0;
-                  newEventGroups[key] = {
-                    ...localTeamComposition.eventGroups[key],
-                    rosterSpots: {
-                      men: menPerGroup + extraMen,
-                      women: womenPerGroup + extraWomen
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Team Focus:</label>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      applyTeamFocusDistribution(e.target.value);
+                      e.target.value = ''; // Reset dropdown
                     }
-                  };
-                  menRemaining -= extraMen;
-                  womenRemaining -= extraWomen;
-                });
+                  }}
+                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  defaultValue=""
+                >
+                  <option value="">Select Focus...</option>
+                  <option value="sprint">Sprint Focused</option>
+                  <option value="distance">Distance Focused</option>
+                  <option value="jump">Jump Focused</option>
+                  <option value="throw">Throw Focused</option>
+                  <option value="hurdle">Hurdle Focused</option>
+                  <option value="balanced">Balanced Program</option>
+                </select>
+              </div>
+              <button
+                onClick={() => {
+                  // Auto-balance roster spots to match team totals
+                  const eventGroups = Object.keys(localTeamComposition.eventGroups);
+                  const menPerGroup = Math.floor(localTeamComposition.genderDistribution.men.total / eventGroups.length);
+                  const womenPerGroup = Math.floor(localTeamComposition.genderDistribution.women.total / eventGroups.length);
 
-                setLocalTeamComposition(prev => ({
-                  ...prev,
-                  eventGroups: newEventGroups
-                }));
-              }}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
-            >
-              <SafeIcon icon={FiShuffle} className="w-4 h-4" />
-              Auto-Balance Roster
-            </button>
+                  // Distribute evenly with remainder going to first groups
+                  let menRemaining = localTeamComposition.genderDistribution.men.total - (menPerGroup * eventGroups.length);
+                  let womenRemaining = localTeamComposition.genderDistribution.women.total - (womenPerGroup * eventGroups.length);
+
+                  const newEventGroups = {};
+                  eventGroups.forEach(key => {
+                    const extraMen = menRemaining > 0 ? 1 : 0;
+                    const extraWomen = womenRemaining > 0 ? 1 : 0;
+                    newEventGroups[key] = {
+                      ...localTeamComposition.eventGroups[key],
+                      rosterSpots: {
+                        men: menPerGroup + extraMen,
+                        women: womenPerGroup + extraWomen
+                      }
+                    };
+                    menRemaining -= extraMen;
+                    womenRemaining -= extraWomen;
+                  });
+
+                  setLocalTeamComposition(prev => ({
+                    ...prev,
+                    eventGroups: newEventGroups
+                  }));
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+              >
+                <SafeIcon icon={FiShuffle} className="w-4 h-4" />
+                Even Distribution
+              </button>
+            </div>
           </div>
         </div>
 
