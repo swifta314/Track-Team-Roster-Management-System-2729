@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
@@ -9,94 +9,103 @@ import TeamCompositionChart from './TeamCompositionChart';
 import RecruitingNeeds from './RecruitingNeeds';
 import QuickStats from './QuickStats';
 import GenderFilterBadge from './GenderFilterBadge';
-import PerformanceMetrics from './PerformanceMetrics';
-import DataManagement from './DataManagement';
-import AdvancedSearch from './AdvancedSearch';
 
-const { FiArchive } = FiIcons;
+const { FiArchive, FiFilter, FiToggleLeft, FiToggleRight } = FiIcons;
 
-const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGenderFilter, setAthletes }) => {
+const Dashboard = ({ athletes, teamComposition, scholarshipLimits, globalGenderFilter, setGlobalGenderFilter }) => {
   const [includeArchived, setIncludeArchived] = useState(false);
 
-  const filteredAthletes = useMemo(() => {
-    return athletes.filter(athlete => {
-      // Filter by archived status
-      if (!includeArchived && athlete.status === 'archived') return false;
+  const filteredAthletes = athletes.filter(athlete => {
+    // Filter by archived status
+    if (!includeArchived && athlete.status === 'archived') return false;
+    
+    // Filter by gender
+    if (globalGenderFilter === 'both') return true;
+    if (globalGenderFilter === 'men') return athlete.gender === 'M';
+    if (globalGenderFilter === 'women') return athlete.gender === 'F';
+    return true;
+  });
 
-      // Filter by gender
-      if (globalGenderFilter === 'both') return true;
-      if (globalGenderFilter === 'men') return athlete.gender === 'M';
-      if (globalGenderFilter === 'women') return athlete.gender === 'F';
-      return true;
-    });
-  }, [athletes, includeArchived, globalGenderFilter]);
-
-  const archivedCount = useMemo(() => {
+  const getArchivedCount = () => {
     return athletes.filter(athlete => athlete.status === 'archived').length;
-  }, [athletes]);
+  };
 
-  const activeCount = useMemo(() => {
+  const getActiveCount = () => {
     return athletes.filter(athlete => athlete.status !== 'archived').length;
-  }, [athletes]);
+  };
 
-  const genderTitle = useMemo(() => {
+  const getGenderTitle = () => {
     if (globalGenderFilter === 'men') return "Men's Team - ";
     if (globalGenderFilter === 'women') return "Women's Team - ";
     return "";
-  }, [globalGenderFilter]);
+  };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-6 space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4 md:mb-8"
+        className="mb-8"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              {genderTitle}Ball State Track & Field Dashboard
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {getGenderTitle()}Ball State Track & Field Dashboard
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-gray-600 dark:text-gray-300">
               Comprehensive roster and scholarship management
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {/* Archive Toggle */}
-            <button
-              onClick={() => setIncludeArchived(!includeArchived)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                includeArchived
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              <SafeIcon icon={FiArchive} className="w-4 h-4" />
-              {includeArchived ? 'Exclude Archived' : 'Include Archived'}
-              {!includeArchived && archivedCount > 0 && (
-                <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs ml-1">
-                  {archivedCount}
-                </span>
-              )}
-            </button>
-          </div>
         </div>
 
-        {/* Filter indicator */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <GenderFilterBadge globalGenderFilter={globalGenderFilter} />
+        {/* Filter Controls */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Athletes:</span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {filteredAthletes.length} of {includeArchived ? athletes.length : activeCount}
+              <SafeIcon icon={FiFilter} className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
+            </div>
+            
+            <GenderFilterBadge globalGenderFilter={globalGenderFilter} />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Athletes:</span>
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                {filteredAthletes.length} of {includeArchived ? athletes.length : getActiveCount()}
               </span>
             </div>
-            {includeArchived && (
+
+            {/* Archived Toggle */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeArchived}
+                  onChange={() => setIncludeArchived(!includeArchived)}
+                  className="sr-only"
+                />
+                <div className={`relative w-11 h-6 rounded-full transition ${includeArchived ? 'bg-orange-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${includeArchived ? 'translate-x-5' : ''}`}></div>
+                </div>
+                <div className="ml-3 flex items-center gap-2">
+                  <SafeIcon icon={FiArchive} className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Include Archived
+                  </span>
+                  {getArchivedCount() > 0 && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                      {getArchivedCount()}
+                    </span>
+                  )}
+                </div>
+              </label>
+            </div>
+
+            {includeArchived && getArchivedCount() > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Including:</span>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                  {archivedCount} archived
+                <span className="text-sm text-gray-600 dark:text-gray-400">Including:</span>
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                  {getArchivedCount()} archived
                 </span>
               </div>
             )}
@@ -106,23 +115,12 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
 
       <QuickStats athletes={filteredAthletes} />
 
-      <PerformanceMetrics 
-        athletes={filteredAthletes}
-        globalGenderFilter={globalGenderFilter}
-      />
-
-      <AdvancedSearch
-        athletes={athletes}
-        onFilteredResults={(results) => console.log("Filtered results:", results)}
-      />
-
-      <DataManagement
-        athletes={athletes}
-        setAthletes={setAthletes}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ScholarshipOverview genderFilter={globalGenderFilter} athletes={filteredAthletes} />
+        <ScholarshipOverview 
+          genderFilter={globalGenderFilter} 
+          athletes={filteredAthletes} 
+          scholarshipLimits={scholarshipLimits} 
+        />
         <ClassSizeChart athletes={filteredAthletes} />
       </div>
 
@@ -135,4 +133,4 @@ const Dashboard = ({ athletes, teamComposition, globalGenderFilter, setGlobalGen
   );
 };
 
-export default React.memo(Dashboard);
+export default Dashboard;

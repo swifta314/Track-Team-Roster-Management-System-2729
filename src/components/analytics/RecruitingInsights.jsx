@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
+import { mapEventToGroup, getEventGroupName } from '../../utils/eventMapping';
 
 const { FiTarget, FiUsers, FiTrendingUp } = FiIcons;
 
@@ -11,17 +12,21 @@ const RecruitingInsights = ({ recruitingNeeds, athletes }) => {
 
   const calculateEventGroupNeeds = () => {
     const needs = {};
+
     graduatingAthletes.forEach(athlete => {
       const eventGroup = mapEventToGroup(athlete.athleticPerformance.primaryEvents[0]);
-      if (!needs[eventGroup]) {
-        needs[eventGroup] = {
+      const groupName = getEventGroupName(eventGroup);
+      
+      if (!needs[groupName]) {
+        needs[groupName] = {
           replacing: 0,
           scholarshipAvailable: 0,
           priority: 'low'
         };
       }
-      needs[eventGroup].replacing++;
-      needs[eventGroup].scholarshipAvailable += athlete.scholarshipAmount;
+      
+      needs[groupName].replacing++;
+      needs[groupName].scholarshipAvailable += athlete.scholarshipAmount;
     });
 
     // Set priority based on number of athletes to replace
@@ -33,30 +38,7 @@ const RecruitingInsights = ({ recruitingNeeds, athletes }) => {
     return needs;
   };
 
-  const mapEventToGroup = (event) => {
-    const eventMap = {
-      '100m': 'Sprints',
-      '200m': 'Sprints',
-      '400m': 'Sprints',
-      '800m': 'Middle Distance',
-      '1500m': 'Middle Distance',
-      '3000m': 'Distance',
-      '5000m': 'Distance',
-      '10000m': 'Distance',
-      'Long Jump': 'Jumps',
-      'Triple Jump': 'Jumps',
-      'High Jump': 'Jumps',
-      'Pole Vault': 'Jumps',
-      'Shot Put': 'Throws',
-      'Discus': 'Throws',
-      'Javelin': 'Throws',
-      'Hammer': 'Throws'
-    };
-    return eventMap[event] || 'Other';
-  };
-
   const eventGroupNeeds = calculateEventGroupNeeds();
-
   const priorityColorMap = {
     high: 'bg-red-100 text-red-800',
     medium: 'bg-yellow-100 text-yellow-800',
@@ -127,8 +109,8 @@ const RecruitingInsights = ({ recruitingNeeds, athletes }) => {
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-900">{need.eventGroup}</span>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        need.gender === 'Men' ? 'bg-blue-100 text-blue-800' :
-                        need.gender === 'Women' ? 'bg-pink-100 text-pink-800' :
+                        need.gender === 'Men' ? 'bg-blue-100 text-blue-800' : 
+                        need.gender === 'Women' ? 'bg-pink-100 text-pink-800' : 
                         'bg-purple-100 text-purple-800'
                       }`}>
                         {need.gender}

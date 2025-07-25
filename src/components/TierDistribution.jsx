@@ -30,8 +30,8 @@ const TierDistribution = ({ athletes, genderFilter }) => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">{`${payload[0].name}: ${payload[0].value} athletes`}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{`${payload[0].name}: ${payload[0].value} athletes`}</p>
         </div>
       );
     }
@@ -48,12 +48,11 @@ const TierDistribution = ({ athletes, genderFilter }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-lg p-6"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
     >
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
         {getGenderTitle()}Performance Tier Distribution
       </h2>
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <ResponsiveContainer width="100%" height={300}>
@@ -74,17 +73,16 @@ const TierDistribution = ({ athletes, genderFilter }) => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Tier Criteria</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tier Criteria</h3>
           {Object.entries(tierCriteria).map(([key, tier]) => (
-            <div key={key} className="border border-gray-200 rounded-lg p-4">
+            <div key={key} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
               <div className="flex items-center gap-3 mb-2">
                 <div className={`w-4 h-4 rounded ${tier.color}`}></div>
-                <h4 className="font-semibold text-gray-900">{tier.name}</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-white">{tier.name}</h4>
               </div>
-              <p className="text-sm text-gray-600 mb-2">{tier.description}</p>
-              <div className="text-xs text-gray-500">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{tier.description}</p>
+              <div className="text-xs text-gray-500 dark:text-gray-500">
                 <p>Sample times: 100m Men: {tier.criteria['100m']?.men}, Women: {tier.criteria['100m']?.women}</p>
               </div>
             </div>

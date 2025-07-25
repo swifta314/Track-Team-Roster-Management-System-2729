@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
+import { isValidEvent } from '../../utils/eventMapping';
 
 const { FiTrendingUp, FiArrowUp, FiArrowDown, FiAward } = FiIcons;
 
@@ -16,7 +17,9 @@ const PerformanceTrends = ({ athletes }) => {
     const eventSet = new Set();
     athletes.forEach(athlete => {
       athlete.athleticPerformance.primaryEvents.forEach(event => {
-        eventSet.add(event);
+        if (isValidEvent(event)) {
+          eventSet.add(event);
+        }
       });
     });
     return Array.from(eventSet).sort();
@@ -25,9 +28,11 @@ const PerformanceTrends = ({ athletes }) => {
   // Process performance data for the selected event
   const performanceData = useMemo(() => {
     const relevantAthletes = athletes.filter(athlete => {
-      const genderMatch = genderFilter === 'all' || 
-        (genderFilter === 'men' && athlete.gender === 'M') ||
+      const genderMatch = 
+        genderFilter === 'all' || 
+        (genderFilter === 'men' && athlete.gender === 'M') || 
         (genderFilter === 'women' && athlete.gender === 'F');
+      
       return athlete.athleticPerformance.primaryEvents.includes(selectedEvent) && genderMatch;
     });
 
@@ -44,6 +49,7 @@ const PerformanceTrends = ({ athletes }) => {
     // Group by timeframe
     const groupedData = progressions.reduce((acc, curr) => {
       const key = timeframe === 'season' ? curr.season : curr.year;
+      
       if (!acc[key]) {
         acc[key] = {
           timepoint: key,
@@ -53,23 +59,27 @@ const PerformanceTrends = ({ athletes }) => {
           count: 0
         };
       }
+      
       const value = parseFloat(curr.best);
       acc[key].average += value;
       acc[key].best = Math.min(acc[key].best, value);
       acc[key].worst = Math.max(acc[key].worst, value);
       acc[key].count++;
+      
       return acc;
     }, {});
 
     // Calculate averages and convert to array
-    return Object.values(groupedData).map(data => ({
-      ...data,
-      average: data.average / data.count
-    })).sort((a, b) => 
-      timeframe === 'season' 
-        ? a.timepoint.localeCompare(b.timepoint)
-        : a.timepoint - b.timepoint
-    );
+    return Object.values(groupedData)
+      .map(data => ({
+        ...data,
+        average: data.average / data.count
+      }))
+      .sort((a, b) => 
+        timeframe === 'season' 
+          ? a.timepoint.localeCompare(b.timepoint) 
+          : a.timepoint - b.timepoint
+      );
   }, [athletes, selectedEvent, timeframe, genderFilter]);
 
   // Calculate improvement metrics
@@ -78,7 +88,6 @@ const PerformanceTrends = ({ athletes }) => {
     
     const first = performanceData[0];
     const last = performanceData[performanceData.length - 1];
-    
     const averageImprovement = ((first.average - last.average) / first.average) * 100;
     const bestImprovement = ((first.best - last.best) / first.best) * 100;
     
@@ -106,7 +115,6 @@ const PerformanceTrends = ({ athletes }) => {
               ))}
             </select>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Timeframe</label>
             <select
@@ -118,7 +126,6 @@ const PerformanceTrends = ({ athletes }) => {
               <option value="year">By Year</option>
             </select>
           </div>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
             <select
@@ -154,9 +161,7 @@ const PerformanceTrends = ({ athletes }) => {
             <div className="flex items-center gap-2 mt-2">
               <SafeIcon
                 icon={improvementMetrics.isPositiveTrend ? FiArrowUp : FiArrowDown}
-                className={`w-4 h-4 ${
-                  improvementMetrics.isPositiveTrend ? 'text-green-500' : 'text-red-500'
-                }`}
+                className={`w-4 h-4 ${improvementMetrics.isPositiveTrend ? 'text-green-500' : 'text-red-500'}`}
               />
               <span className="text-sm text-gray-600">
                 {improvementMetrics.isPositiveTrend ? 'Improving' : 'Declining'} trend
@@ -219,27 +224,9 @@ const PerformanceTrends = ({ athletes }) => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="average"
-                stroke="#CC0000"
-                name="Average"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="best"
-                stroke="#10B981"
-                name="Best"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="worst"
-                stroke="#6B7280"
-                name="Worst"
-                strokeWidth={2}
-              />
+              <Line type="monotone" dataKey="average" stroke="#CC0000" name="Average" strokeWidth={2} />
+              <Line type="monotone" dataKey="best" stroke="#10B981" name="Best" strokeWidth={2} />
+              <Line type="monotone" dataKey="worst" stroke="#6B7280" name="Worst" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -257,8 +244,7 @@ const PerformanceTrends = ({ athletes }) => {
               <p className="text-sm text-gray-600">
                 {improvementMetrics?.isPositiveTrend
                   ? `Team is showing consistent improvement in ${selectedEvent} with an average improvement of ${Math.abs(improvementMetrics.averageImprovement).toFixed(2)}%`
-                  : `Team performance in ${selectedEvent} has declined by ${Math.abs(improvementMetrics?.averageImprovement).toFixed(2)}%. Consider reviewing training programs.`
-                }
+                  : `Team performance in ${selectedEvent} has declined by ${Math.abs(improvementMetrics?.averageImprovement).toFixed(2)}%. Consider reviewing training programs.`}
               </p>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -298,8 +284,7 @@ const PerformanceTrends = ({ athletes }) => {
                         {athlete.personalBest}
                       </span>
                     </div>
-                  ))
-                }
+                  ))}
               </div>
             </div>
             <div className="p-4 bg-gray-50 rounded-lg">

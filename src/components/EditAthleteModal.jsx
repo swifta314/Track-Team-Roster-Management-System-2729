@@ -6,7 +6,7 @@ import {tierCriteria, yearGroups} from '../data/mockData';
 
 const {FiX, FiSave, FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiBookOpen, FiTrendingUp, FiDollarSign, FiMale, FiFemale, FiCheck, FiClock, FiTarget, FiAlertCircle, FiRefreshCw, FiAward, FiPercent} = FiIcons;
 
-const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
+const EditAthleteModal = ({isOpen, onClose, onUpdateAthlete, athlete}) => {
   const [formData, setFormData] = useState({
     // Basic Info
     name: '',
@@ -29,9 +29,6 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
     event: '',
     personalBest: '',
     tier: 'prospect',
-    primaryEvents: [''],
-    additionalEventTimes: {},
-    additionalEventTiers: {},
     highSchool: '',
     eligibilityStatus: 'Eligible',
     
@@ -51,6 +48,41 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [autoTierAssigned, setAutoTierAssigned] = useState(false);
   const [manualTierOverride, setManualTierOverride] = useState(false);
+
+  // Initialize form data when athlete prop changes
+  useEffect(() => {
+    if (athlete && isOpen) {
+      setFormData({
+        name: athlete.name || '',
+        gender: athlete.gender || 'M',
+        year: athlete.year || 'freshman',
+        graduationYear: athlete.graduationYear || new Date().getFullYear() + 4,
+        email: athlete.contactInfo?.email || '',
+        phone: athlete.contactInfo?.phone || '',
+        address: athlete.contactInfo?.address || '',
+        major: athlete.academics?.major || '',
+        gpa: athlete.gpa || '',
+        satScore: athlete.academics?.satScore || '',
+        actScore: athlete.academics?.actScore || '',
+        event: athlete.event || '',
+        personalBest: athlete.personalBest || '',
+        tier: athlete.tier || 'prospect',
+        highSchool: athlete.highSchool || '',
+        eligibilityStatus: athlete.eligibilityStatus || 'Eligible',
+        scholarshipAmount: athlete.scholarshipAmount || 0,
+        scholarshipType: athlete.scholarshipType || 'None',
+        scholarshipPercentage: athlete.scholarshipPercentage || 0,
+        scholarshipDuration: athlete.scholarshipDuration || '1 year renewable',
+        scholarshipOfferStatus: athlete.scholarshipOfferStatus || 'No Offer',
+        scholarshipAccepted: athlete.scholarshipAccepted || false,
+        status: athlete.status || 'active'
+      });
+      setErrors({});
+      setActiveTab('basic');
+      setAutoTierAssigned(false);
+      setManualTierOverride(false);
+    }
+  }, [athlete, isOpen]);
 
   // Calculate scholarship percentage when dollar amount changes
   useEffect(() => {
@@ -184,14 +216,13 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
       return;
     }
 
-    const newId = Date.now().toString();
-
-    // Create new athlete object from form data
-    const newAthlete = {
-      id: newId,
+    // Create updated athlete object from form data
+    const updatedAthlete = {
+      ...athlete,
       name: formData.name,
       gender: formData.gender,
       contactInfo: {
+        ...athlete.contactInfo,
         email: formData.email,
         phone: formData.phone,
         address: formData.address
@@ -210,6 +241,7 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
       gpa: parseFloat(formData.gpa) || 0,
       status: formData.status,
       academics: {
+        ...athlete.academics,
         major: formData.major,
         satScore: parseInt(formData.satScore) || 0,
         actScore: parseInt(formData.actScore) || 0
@@ -217,22 +249,21 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
       highSchool: formData.highSchool,
       eligibilityStatus: formData.eligibilityStatus,
       athleticPerformance: {
-        primaryEvents: formData.event ? [formData.event] : [],
-        personalRecords: { [formData.event]: formData.personalBest },
-        meetResults: [],
-        progression: [],
-        rankings: { conference: null, regional: null, national: null }
+        ...athlete.athleticPerformance,
+        primaryEvents: formData.event ? [formData.event] : athlete.athleticPerformance?.primaryEvents || [],
+        personalRecords: {
+          ...athlete.athleticPerformance?.personalRecords,
+          [formData.event]: formData.personalBest
+        }
       },
       recruitingStatus: {
-        communicationHistory: [],
-        visits: { official: null, unofficial: null },
+        ...athlete.recruitingStatus,
         offerStatus: formData.scholarshipOfferStatus,
-        commitmentStatus: formData.scholarshipAccepted ? 'Committed' : 'Uncommitted',
-        paperworkStatus: 'Pending'
+        commitmentStatus: formData.scholarshipAccepted ? 'Committed' : 'Uncommitted'
       }
     };
 
-    onAddAthlete(newAthlete);
+    onUpdateAthlete(updatedAthlete);
     handleClose();
   };
 
@@ -242,9 +273,6 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
       email: '', phone: '', address: '',
       major: '', gpa: '', satScore: '', actScore: '',
       event: '', personalBest: '', tier: 'prospect',
-      primaryEvents: [''],
-      additionalEventTimes: {},
-      additionalEventTiers: {},
       highSchool: '', eligibilityStatus: 'Eligible',
       scholarshipAmount: 0, scholarshipType: 'None', scholarshipPercentage: 0,
       scholarshipDuration: '1 year renewable', scholarshipOfferStatus: 'No Offer', scholarshipAccepted: false,
@@ -538,6 +566,7 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
             <option value="suspended">Suspended</option>
             <option value="redshirt">Redshirt</option>
             <option value="inactive">Inactive</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
         {/* Scholarship Status Summary */}
@@ -586,6 +615,7 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
       </div>
   );
 
+  if (!athlete) return null;
 
   return (
     <AnimatePresence>
@@ -605,7 +635,7 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
             {/* Header */}
             <div className="relative p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Add New Athlete</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Edit Athlete: {athlete.name}</h2>
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
                   <SafeIcon icon={FiX} className="w-6 h-6" />
                 </button>
@@ -655,7 +685,7 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
                   className="flex items-center gap-2 px-4 py-2 bg-ballstate-red text-white rounded-lg font-medium hover:bg-red-700"
                 >
                   <SafeIcon icon={FiSave} className="w-4 h-4" />
-                  Add Athlete
+                  Update Athlete
                 </button>
               </div>
             </form>
@@ -666,4 +696,4 @@ const AddAthleteModal = ({isOpen, onClose, onAddAthlete}) => {
   );
 };
 
-export default AddAthleteModal;
+export default EditAthleteModal;

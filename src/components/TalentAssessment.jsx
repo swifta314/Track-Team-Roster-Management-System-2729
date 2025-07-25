@@ -14,7 +14,7 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
   const [activeTab, setActiveTab] = useState('evaluation');
   const [selectedAthletes, setSelectedAthletes] = useState([]);
   const [evaluationResults, setEvaluationResults] = useState({});
-  
+
   // Filter athletes based on the global gender filter
   const filteredAthletes = useMemo(() => {
     if (globalGenderFilter === 'men') {
@@ -24,15 +24,12 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
     }
     return athletes;
   }, [athletes, globalGenderFilter]);
-  
+
   // Save evaluation results to state
   const saveEvaluation = (athleteId, evaluation) => {
-    setEvaluationResults(prev => ({
-      ...prev,
-      [athleteId]: evaluation
-    }));
+    setEvaluationResults(prev => ({...prev, [athleteId]: evaluation}));
   };
-  
+
   // Add or remove athlete from selection
   const toggleAthleteSelection = (athleteId) => {
     if (selectedAthletes.includes(athleteId)) {
@@ -41,7 +38,7 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
       setSelectedAthletes(prev => [...prev, athleteId]);
     }
   };
-  
+
   // Clear all selected athletes
   const clearSelectedAthletes = () => {
     setSelectedAthletes([]);
@@ -51,7 +48,7 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
   const selectedAthletesData = useMemo(() => {
     return filteredAthletes.filter(athlete => selectedAthletes.includes(athlete.id));
   }, [filteredAthletes, selectedAthletes]);
-  
+
   // Get the title based on the gender filter
   const getGenderTitle = () => {
     if (globalGenderFilter === 'men') return "Men's Team - ";
@@ -83,17 +80,17 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
           <div className="flex items-center gap-2">
             <SafeIcon icon={FiFilter} className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Viewing:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium 
-              ${globalGenderFilter === 'all' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              globalGenderFilter === 'all' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 
               globalGenderFilter === 'men' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
               'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'}`}
             >
               {globalGenderFilter === 'all' ? 'All Athletes' : 
-              globalGenderFilter === 'men' ? 'Men\'s Team' : 
-              'Women\'s Team'}
+               globalGenderFilter === 'men' ? 'Men\'s Team' : 
+               'Women\'s Team'}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">Athletes Selected:</span>
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
@@ -101,17 +98,17 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
             </span>
             {selectedAthletes.length > 0 && (
               <button 
-                onClick={clearSelectedAthletes} 
+                onClick={clearSelectedAthletes}
                 className="text-xs text-red-600 dark:text-red-400 hover:underline"
               >
                 Clear
               </button>
             )}
           </div>
-          
+
           {selectedAthletes.length > 0 && activeTab !== 'comparison' && (
             <button 
-              onClick={() => setActiveTab('comparison')} 
+              onClick={() => setActiveTab('comparison')}
               className="flex items-center gap-2 px-3 py-1 ml-auto bg-ballstate-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
             >
               Compare Selected ({selectedAthletes.length})
@@ -128,10 +125,11 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap 
-                ${activeTab === tab.id ? 
-                'text-ballstate-red dark:text-red-400 border-b-2 border-ballstate-red dark:border-red-500' : 
-                'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+              className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap ${
+                activeTab === tab.id 
+                  ? 'text-ballstate-red dark:text-red-400 border-b-2 border-ballstate-red dark:border-red-500' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
             >
               <SafeIcon icon={tab.icon} className="w-4 h-4" />
               {tab.name}
@@ -148,18 +146,18 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
         transition={{ duration: 0.3 }}
       >
         {activeTab === 'evaluation' && (
-          <EvaluationForm 
-            athletes={filteredAthletes} 
-            selectedAthletes={selectedAthletes} 
+          <EvaluationForm
+            athletes={filteredAthletes}
+            selectedAthletes={selectedAthletes}
             toggleAthleteSelection={toggleAthleteSelection}
             evaluationResults={evaluationResults}
             saveEvaluation={saveEvaluation}
             tierCriteria={tierCriteria}
           />
         )}
-        
+
         {activeTab === 'comparison' && (
-          <ComparisonTools 
+          <ComparisonTools
             athletes={filteredAthletes}
             selectedAthletes={selectedAthletesData}
             toggleAthleteSelection={toggleAthleteSelection}
@@ -167,18 +165,18 @@ const TalentAssessment = ({ athletes, teamComposition, scholarshipLimits, global
             tierCriteria={tierCriteria}
           />
         )}
-        
+
         {activeTab === 'impact' && (
-          <PotentialImpactAnalysis 
+          <PotentialImpactAnalysis
             athletes={filteredAthletes}
             selectedAthletes={selectedAthletesData}
             teamComposition={teamComposition}
             evaluationResults={evaluationResults}
           />
         )}
-        
+
         {activeTab === 'calculator' && (
-          <ScholarshipCalculator 
+          <ScholarshipCalculator
             athletes={filteredAthletes}
             selectedAthletes={selectedAthletesData}
             toggleAthleteSelection={toggleAthleteSelection}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
+import { mapEventToGroup, getEventGroupName } from '../../utils/eventMapping';
 
 const { FiTrendingUp, FiAward, FiBarChart2 } = FiIcons;
 
@@ -13,7 +14,6 @@ const CompetitiveAnalysis = ({ athletes }) => {
       ranking: i + 1,
       count: 0
     }));
-
     const regionalRankings = new Array(10).fill(0).map((_, i) => ({
       ranking: i + 1,
       count: 0
@@ -35,12 +35,14 @@ const CompetitiveAnalysis = ({ athletes }) => {
   // Calculate team strengths by event group
   const calculateTeamStrengths = () => {
     const eventGroups = {};
-    
+
     athletes.forEach(athlete => {
       const eventGroup = mapEventToGroup(athlete.athleticPerformance.primaryEvents[0]);
-      if (!eventGroups[eventGroup]) {
-        eventGroups[eventGroup] = {
-          name: eventGroup,
+      const groupName = getEventGroupName(eventGroup);
+      
+      if (!eventGroups[groupName]) {
+        eventGroups[groupName] = {
+          name: groupName,
           athletes: 0,
           eliteCount: 0,
           competitiveCount: 0,
@@ -49,12 +51,11 @@ const CompetitiveAnalysis = ({ athletes }) => {
         };
       }
       
-      eventGroups[eventGroup].athletes++;
-      if (athlete.tier === 'elite') eventGroups[eventGroup].eliteCount++;
-      if (athlete.tier === 'competitive') eventGroups[eventGroup].competitiveCount++;
-      
+      eventGroups[groupName].athletes++;
+      if (athlete.tier === 'elite') eventGroups[groupName].eliteCount++;
+      if (athlete.tier === 'competitive') eventGroups[groupName].competitiveCount++;
       if (athlete.athleticPerformance.rankings.conference) {
-        eventGroups[eventGroup].totalRankings += athlete.athleticPerformance.rankings.conference;
+        eventGroups[groupName].totalRankings += athlete.athleticPerformance.rankings.conference;
       }
     });
 
@@ -66,28 +67,6 @@ const CompetitiveAnalysis = ({ athletes }) => {
     });
 
     return Object.values(eventGroups);
-  };
-
-  const mapEventToGroup = (event) => {
-    const eventMap = {
-      '100m': 'Sprints',
-      '200m': 'Sprints',
-      '400m': 'Sprints',
-      '800m': 'Middle Distance',
-      '1500m': 'Middle Distance',
-      '3000m': 'Distance',
-      '5000m': 'Distance',
-      '10000m': 'Distance',
-      'Long Jump': 'Jumps',
-      'Triple Jump': 'Jumps',
-      'High Jump': 'Jumps',
-      'Pole Vault': 'Jumps',
-      'Shot Put': 'Throws',
-      'Discus': 'Throws',
-      'Javelin': 'Throws',
-      'Hammer': 'Throws'
-    };
-    return eventMap[event] || 'Other';
   };
 
   const { conferenceRankings, regionalRankings } = calculateRankingsDistribution();

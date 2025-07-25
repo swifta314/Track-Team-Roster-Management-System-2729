@@ -9,6 +9,7 @@ const TeamPredictions = ({ athletes }) => {
   // Calculate projected points for conference championships
   const calculateProjectedPoints = () => {
     let totalPoints = 0;
+    
     athletes.forEach(athlete => {
       if (athlete.athleticPerformance.rankings.conference) {
         // Points based on conference ranking
@@ -17,6 +18,7 @@ const TeamPredictions = ({ athletes }) => {
         }
       }
     });
+    
     return totalPoints;
   };
 
@@ -44,6 +46,7 @@ const TeamPredictions = ({ athletes }) => {
           </div>
           <h3 className="text-lg font-semibold text-gray-900">Conference Championship Projections</h3>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2">Projected Points</h4>
@@ -77,15 +80,14 @@ const TeamPredictions = ({ athletes }) => {
           </div>
           <h3 className="text-lg font-semibold text-gray-900">Potential Championship Qualifiers</h3>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {potentialQualifiers.slice(0, 6).map((athlete, index) => (
             <div key={athlete.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900">{athlete.name}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    athlete.gender === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${athlete.gender === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
                     {athlete.gender === 'M' ? 'Men' : 'Women'}
                   </span>
                 </div>

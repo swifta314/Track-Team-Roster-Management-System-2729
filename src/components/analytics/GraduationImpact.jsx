@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
+import { mapEventToGroup, getEventGroupName } from '../../utils/eventMapping';
 
 const { FiUserMinus, FiDollarSign, FiAward } = FiIcons;
 
@@ -19,50 +20,31 @@ const GraduationImpact = ({ athletes }) => {
 
     graduatingAthletes.forEach(athlete => {
       const eventGroup = mapEventToGroup(athlete.athleticPerformance.primaryEvents[0]);
-      if (!impact.byEventGroup[eventGroup]) {
-        impact.byEventGroup[eventGroup] = {
+      const groupName = getEventGroupName(eventGroup);
+      
+      if (!impact.byEventGroup[groupName]) {
+        impact.byEventGroup[groupName] = {
           count: 0,
           scholarships: 0,
           eliteCount: 0
         };
       }
-      impact.byEventGroup[eventGroup].count++;
-      impact.byEventGroup[eventGroup].scholarships += athlete.scholarshipAmount;
+      
+      impact.byEventGroup[groupName].count++;
+      impact.byEventGroup[groupName].scholarships += athlete.scholarshipAmount;
       if (athlete.tier === 'elite') {
-        impact.byEventGroup[eventGroup].eliteCount++;
+        impact.byEventGroup[groupName].eliteCount++;
       }
     });
 
     return impact;
   };
 
-  const mapEventToGroup = (event) => {
-    const eventMap = {
-      '100m': 'Sprints',
-      '200m': 'Sprints',
-      '400m': 'Sprints',
-      '800m': 'Middle Distance',
-      '1500m': 'Middle Distance',
-      '3000m': 'Distance',
-      '5000m': 'Distance',
-      '10000m': 'Distance',
-      'Long Jump': 'Jumps',
-      'Triple Jump': 'Jumps',
-      'High Jump': 'Jumps',
-      'Pole Vault': 'Jumps',
-      'Shot Put': 'Throws',
-      'Discus': 'Throws',
-      'Javelin': 'Throws',
-      'Hammer': 'Throws'
-    };
-    return eventMap[event] || 'Other';
-  };
-
   const impact = calculateImpact();
 
   return (
     <div className="space-y-6">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-xl shadow-lg p-6"
@@ -80,7 +62,6 @@ const GraduationImpact = ({ athletes }) => {
             <p className="text-3xl font-bold text-red-600">{graduatingAthletes.length}</p>
             <p className="text-sm text-gray-600 mt-1">Total departing athletes</p>
           </div>
-
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2">Scholarship Released</h4>
             <p className="text-3xl font-bold text-green-600">
@@ -88,7 +69,6 @@ const GraduationImpact = ({ athletes }) => {
             </p>
             <p className="text-sm text-gray-600 mt-1">Available for recruitment</p>
           </div>
-
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2">Elite Athletes Lost</h4>
             <p className="text-3xl font-bold text-yellow-600">{impact.eliteAthletes}</p>
@@ -138,9 +118,7 @@ const GraduationImpact = ({ athletes }) => {
                 <div>
                   <span className="font-medium text-gray-900">{athlete.name}</span>
                   <div className="flex gap-2 mt-1">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      athlete.gender === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
-                    }`}>
+                    <span className={`text-xs px-2 py-1 rounded-full ${athlete.gender === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
                       {athlete.gender === 'M' ? 'Men' : 'Women'}
                     </span>
                     <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">

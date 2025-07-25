@@ -6,7 +6,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-} 
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -22,6 +22,20 @@ body {
 /* Dark Mode Styles */
 .dark {
   @apply bg-gray-900 text-gray-100;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  @apply text-gray-500;
+}
+
+.dark select option {
+  @apply bg-gray-800;
+}
+
+.dark input[type="date"],
+.dark input[type="time"] {
+  @apply text-gray-100 bg-gray-700;
 }
 
 /* Compact Mode Styles */
@@ -68,4 +82,48 @@ body {
 /* Transition for theme switching */
 body, .dark, .compact {
   transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+}
+
+/* Media Query for responsive menu */
+@media (max-width: 768px) {
+  .menu-transition {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+  }
+  
+  .menu-open {
+    max-height: 500px;
+  }
+}
+
+/* Recharts dark mode overrides */
+.dark .recharts-cartesian-grid line,
+.dark .recharts-cartesian-axis-line {
+  @apply stroke-gray-700;
+}
+
+.dark .recharts-cartesian-axis-tick-value {
+  @apply fill-gray-400;
+}
+
+.dark .recharts-legend-item-text {
+  @apply fill-gray-300 text-gray-300;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  @apply bg-gray-800 border-gray-700 shadow-xl;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-label {
+  @apply text-gray-300;
+}
+
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip .recharts-tooltip-item-list .recharts-tooltip-item {
+  @apply text-gray-300;
+}
+
+/* ChartJS dark mode overrides */
+.dark canvas {
+  filter: brightness(0.9);
 }

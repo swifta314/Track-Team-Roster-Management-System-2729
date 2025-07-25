@@ -20,7 +20,6 @@ const ScholarshipOverview = ({ genderFilter, athletes }) => {
   useEffect(() => {
     if (!athletes || athletes.length === 0) return;
 
-    // Calculate total allocated scholarships by gender
     let menAllocated = 0;
     let womenAllocated = 0;
 
@@ -28,29 +27,37 @@ const ScholarshipOverview = ({ genderFilter, athletes }) => {
       // Skip archived athletes in the calculation
       if (athlete.status === 'archived') return;
       
+      // Use scholarship percentage if available, otherwise calculate from amount
+      let scholarshipEquivalent = 0;
+      if (athlete.scholarshipPercentage && athlete.scholarshipPercentage > 0) {
+        scholarshipEquivalent = athlete.scholarshipPercentage / 100;
+      } else if (athlete.scholarshipAmount > 0) {
+        // Estimate percentage based on typical full scholarship value
+        const estimatedFullValue = athlete.gender === 'M' ? 20000 : 25000;
+        scholarshipEquivalent = athlete.scholarshipAmount / estimatedFullValue;
+      }
+      
       if (athlete.gender === 'M') {
-        menAllocated += athlete.scholarshipAmount > 0 ? 
-          (athlete.scholarshipPercentage / 100) : 0;
+        menAllocated += scholarshipEquivalent;
       } else if (athlete.gender === 'F') {
-        womenAllocated += athlete.scholarshipAmount > 0 ? 
-          (athlete.scholarshipPercentage / 100) : 0;
+        womenAllocated += scholarshipEquivalent;
       }
     });
 
-    // NCAA limits
-    const menTotal = 12.6;
-    const womenTotal = 18.0;
+    // Cap at NCAA limits
+    menAllocated = Math.min(menAllocated, 12.6);
+    womenAllocated = Math.min(womenAllocated, 18.0);
 
     setScholarshipData({
       men: {
-        total: menTotal,
+        total: 12.6,
         allocated: parseFloat(menAllocated.toFixed(1)),
-        available: parseFloat((menTotal - menAllocated).toFixed(1))
+        available: parseFloat((12.6 - menAllocated).toFixed(1))
       },
       women: {
-        total: womenTotal,
+        total: 18.0, 
         allocated: parseFloat(womenAllocated.toFixed(1)),
-        available: parseFloat((womenTotal - womenAllocated).toFixed(1))
+        available: parseFloat((18.0 - womenAllocated).toFixed(1))
       }
     });
   }, [athletes]);

@@ -1,128 +1,178 @@
-import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, {useState, useEffect} from 'react';
+import {DragDropContext, Droppable, Draggable} from '@hello-pangea/dnd';
+import {motion, AnimatePresence} from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import AthleteCard from './AthleteCard';
-import AthleteDetailModal from './AthleteDetailModal';
 import AddAthleteModal from './AddAthleteModal';
+import EditAthleteModal from './EditAthleteModal';
+import AthleteDetailModal from './AthleteDetailModal';
+import AthleteCard from './AthleteCard';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
-import GenderFilterBadge from './GenderFilterBadge';
-import { yearGroups, tierCriteria } from '../data/mockData';
+import GenderToggle from './GenderToggle';
+import {tierCriteria} from '../data/mockData';
 
-const { FiFilter, FiPlus, FiEye, FiArchive } = FiIcons;
+const {FiPlus, FiSearch, FiFilter, FiGrid, FiList, FiArchive, FiUsers, FiEye, FiEyeOff} = FiIcons;
 
-const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGenderFilter }) => {
-  const [viewMode, setViewMode] = useState('year'); // 'year' or 'tier'
-  const [selectedAthlete, setSelectedAthlete] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const AthleteBoard = ({athletes, setAthletes, globalGenderFilter, setGlobalGenderFilter, isDarkMode}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTier, setSelectedTier] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
+  const [selectedEvent, setSelectedEvent] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingAthlete, setEditingAthlete] = useState(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-  const [archiveConfirmation, setArchiveConfirmation] = useState(null);
+  const [selectedAthlete, setSelectedAthlete] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    athlete: null,
+    action: 'delete'
+  });
+  const [showArchived, setShowArchived] = useState(false);
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const { source, destination, draggableId } = result;
-
-    if (source.droppableId === destination.droppableId) return;
-
-    const updatedAthletes = athletes.map(athlete => {
-      if (athlete.id === draggableId) {
-        if (viewMode === 'year') {
-          return { ...athlete, year: destination.droppableId };
-        } else {
-          return { ...athlete, tier: destination.droppableId };
-        }
-      }
-      return athlete;
-    });
-
-    setAthletes(updatedAthletes);
-  };
-
+  // Filter athletes based on all criteria
   const filteredAthletes = athletes.filter(athlete => {
-    // Filter by archived status
-    if (!showArchived && athlete.status === 'archived') return false;
-    if (showArchived && athlete.status !== 'archived') return false;
+    // Search filter
+    const matchesSearch = athlete.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (athlete.event && athlete.event.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    // Filter by gender
-    if (globalGenderFilter === 'both') return true;
-    if (globalGenderFilter === 'men') return athlete.gender === 'M';
-    if (globalGenderFilter === 'women') return athlete.gender === 'F';
-    return true;
+    // Tier filter
+    const matchesTier = selectedTier === 'all' || athlete.tier === selectedTier;
+
+    // Year filter
+    const matchesYear = selectedYear === 'all' || athlete.year === selectedYear;
+
+    // Event filter
+    const matchesEvent = selectedEvent === 'all' || athlete.event === selectedEvent;
+
+    // Gender filter
+    const matchesGender = globalGenderFilter === 'both' ||
+      (globalGenderFilter === 'men' && athlete.gender === 'M') ||
+      (globalGenderFilter === 'women' && athlete.gender === 'F');
+
+    // Archived filter
+    const matchesArchived = showArchived || athlete.status !== 'archived';
+
+    return matchesSearch && matchesTier && matchesYear && matchesEvent && matchesGender && matchesArchived;
   });
 
-  const getColumns = () => {
-    if (viewMode === 'year') {
-      return Object.keys(yearGroups).map(year => ({
-        id: year,
-        title: yearGroups[year].name,
-        color: yearGroups[year].color,
-        athletes: filteredAthletes.filter(athlete => athlete.year === year)
-      }));
-    } else {
-      return Object.keys(tierCriteria).map(tier => ({
-        id: tier,
-        title: tierCriteria[tier].name,
-        color: tierCriteria[tier].color,
-        athletes: filteredAthletes.filter(athlete => athlete.tier === tier)
-      }));
-    }
-  };
-
-  const handleAthleteClick = (athlete) => {
-    setSelectedAthlete(athlete);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-    const handleEditAthlete = (athlete) => {
-        setEditingAthlete(athlete);
-        setIsEditModalOpen(true);
-    };
-
-  const handleAddAthlete = (newAthlete) => {
-    setAthletes(prev => [...prev, newAthlete]);
-  };
-
-  const handleDeleteAthlete = (athlete) => {
-    setDeleteConfirmation(athlete);
-  };
-
-  const confirmDelete = () => {
-    if (deleteConfirmation) {
-      setAthletes(prev => prev.filter(athlete => athlete.id !== deleteConfirmation.id));
-      setDeleteConfirmation(null);
-    }
-  };
-
-  const handleArchiveAthlete = (athlete) => {
-    setArchiveConfirmation(athlete);
-  };
-
-  const confirmArchive = () => {
-    if (archiveConfirmation) {
-      setAthletes(prev => prev.map(athlete =>
-        athlete.id === archiveConfirmation.id
-          ? { ...athlete, status: athlete.status === 'archived' ? 'active' : 'archived' }
-          : athlete
-      ));
-      setArchiveConfirmation(null);
-    }
-  };
+  // Get unique values for filter dropdowns
+  const uniqueTiers = [...new Set(athletes.map(a => a.tier))];
+  const uniqueYears = [...new Set(athletes.map(a => a.year))];
+  const uniqueEvents = [...new Set(athletes.filter(a => a.event).map(a => a.event))];
 
   const getArchivedCount = () => {
     return athletes.filter(athlete => athlete.status === 'archived').length;
   };
 
-  const getActiveCount = () => {
-    return athletes.filter(athlete => athlete.status !== 'archived').length;
+  const openAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleAddAthlete = (newAthlete) => {
+    setAthletes(prev => [...prev, newAthlete]);
+  };
+
+  // Handle athlete click to view details
+  const handleAthleteClick = (athlete) => {
+    if (athlete) {
+      setSelectedAthlete(athlete);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  // Handle athlete edit
+  const handleAthleteEdit = (athlete) => {
+    if (athlete) {
+      setSelectedAthlete(athlete);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleAthleteUpdate = (updatedAthlete) => {
+    setAthletes(prev => prev.map(athlete => 
+      athlete.id === updatedAthlete.id ? updatedAthlete : athlete
+    ));
+    // Update selectedAthlete if it's the one being updated
+    if (selectedAthlete && selectedAthlete.id === updatedAthlete.id) {
+      setSelectedAthlete(updatedAthlete);
+    }
+  };
+
+  const handleDeleteClick = (athlete) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      athlete,
+      action: 'delete'
+    });
+  };
+
+  const handleArchiveClick = (athlete) => {
+    const action = athlete.status === 'archived' ? 'restore' : 'archive';
+    setDeleteConfirmation({
+      isOpen: true,
+      athlete,
+      action
+    });
+  };
+
+  const handleConfirmAction = () => {
+    const {athlete, action} = deleteConfirmation;
+    
+    if (action === 'delete') {
+      setAthletes(prev => prev.filter(a => a.id !== athlete.id));
+    } else if (action === 'archive') {
+      setAthletes(prev => prev.map(a => 
+        a.id === athlete.id ? {...a, status: 'archived'} : a
+      ));
+    } else if (action === 'restore') {
+      setAthletes(prev => prev.map(a => 
+        a.id === athlete.id ? {...a, status: 'active'} : a
+      ));
+    }
+    
+    setDeleteConfirmation({
+      isOpen: false,
+      athlete: null,
+      action: 'delete'
+    });
+  };
+
+  const handleCancelAction = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      athlete: null,
+      action: 'delete'
+    });
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(filteredAthletes);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update the original athletes array maintaining the new order
+    const updatedAthletes = [...athletes];
+    const reorderedIds = items.map(item => item.id);
+
+    // Sort athletes to match the new order for filtered items
+    const otherAthletes = updatedAthletes.filter(athlete => !reorderedIds.includes(athlete.id));
+    const reorderedFiltered = reorderedIds.map(id => updatedAthletes.find(athlete => athlete.id === id));
+
+    setAthletes([...reorderedFiltered, ...otherAthletes]);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedTier('all');
+    setSelectedYear('all');
+    setSelectedEvent('all');
   };
 
   const getGenderTitle = () => {
@@ -131,195 +181,267 @@ const AthleteBoard = ({ athletes, setAthletes, globalGenderFilter, setGlobalGend
     return "";
   };
 
+  // Fix for the includeArchived variable being undefined
+  const includeArchived = showArchived;
+
   return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {getGenderTitle()}Athlete Management Board
-        </h1>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {getGenderTitle()}Athlete Management
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Manage your team roster and athlete information
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
-          {/* Add Athlete Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-ballstate-red text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-          >
-            <SafeIcon icon={FiPlus} className="w-4 h-4" />
-            Add Athlete
-          </button>
-
-          {/* Archive Toggle */}
-          <button
-            onClick={() => setShowArchived(!showArchived)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              showArchived
-                ? 'bg-orange-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <SafeIcon icon={showArchived ? FiEye : FiArchive} className="w-4 h-4" />
-            {showArchived ? 'Show Active' : 'Show Archived'}
-            {!showArchived && getArchivedCount() > 0 && (
-              <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs ml-1">
-                {getArchivedCount()}
-              </span>
-            )}
-          </button>
-
-          {/* View Mode Selection */}
+          <GenderToggle 
+            globalGenderFilter={globalGenderFilter} 
+            setGlobalGenderFilter={setGlobalGenderFilter} 
+          />
           <div className="flex gap-2">
             <button
-              onClick={() => setViewMode('year')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'year'
-                  ? 'bg-ballstate-red text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-4 py-2 bg-ballstate-red text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <SafeIcon icon={FiPlus} className="w-4 h-4" />
+              Add Athlete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <SafeIcon icon={FiFilter} className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
+          </div>
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search athletes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
+              />
+            </div>
+          </div>
+          <select
+            value={selectedTier}
+            onChange={(e) => setSelectedTier(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
+          >
+            <option value="all">All Tiers</option>
+            {uniqueTiers.map(tier => (
+              <option key={tier} value={tier}>{tierCriteria[tier]?.name || tier}</option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
+          >
+            <option value="all">All Years</option>
+            {uniqueYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <select
+            value={selectedEvent}
+            onChange={(e) => setSelectedEvent(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-ballstate-red focus:border-ballstate-red"
+          >
+            <option value="all">All Events</option>
+            {uniqueEvents.map(event => (
+              <option key={event} value={event}>{event}</option>
+            ))}
+          </select>
+          <button
+            onClick={clearFilters}
+            className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <SafeIcon icon={FiUsers} className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {filteredAthletes.length} of {athletes.length} athletes
+              </span>
+            </div>
+            {/* Archived Toggle */}
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={() => setShowArchived(!showArchived)}
+                  className="sr-only"
+                />
+                <div className={`relative w-11 h-6 rounded-full transition ${showArchived ? 'bg-orange-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${showArchived ? 'translate-x-5' : ''}`}></div>
+                </div>
+                <div className="ml-3 flex items-center gap-2">
+                  <SafeIcon icon={FiArchive} className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Include Archived
+                  </span>
+                  {getArchivedCount() > 0 && (
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                      {getArchivedCount()}
+                    </span>
+                  )}
+                </div>
+              </label>
+            </div>
+            {includeArchived && getArchivedCount() > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Including:</span>
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                  {getArchivedCount()} archived
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'grid' ? 'bg-ballstate-red text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              By Year
+              <SafeIcon icon={FiGrid} className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setViewMode('tier')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                viewMode === 'tier'
-                  ? 'bg-ballstate-red text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'list' ? 'bg-ballstate-red text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              By Tier
+              <SafeIcon icon={FiList} className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Team Statistics */}
-      <div className="mb-6 bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <SafeIcon icon={FiFilter} className="w-5 h-5 text-gray-700" />
-          <h2 className="font-semibold text-gray-900">Current Filter</h2>
-        </div>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">View:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              showArchived ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
-            }`}>
-              {showArchived ? 'Archived Athletes' : 'Active Athletes'}
-            </span>
-          </div>
-          <GenderFilterBadge globalGenderFilter={globalGenderFilter} />
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Grouping:</span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              By {viewMode === 'year' ? 'Year' : 'Performance Tier'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Athletes Shown:</span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              {filteredAthletes.length} of {showArchived ? getArchivedCount() : getActiveCount()}
-            </span>
-          </div>
-        </div>
-      </div>
-
+      {/* Athletes Grid/List */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {getColumns().map((column, index) => (
-            <motion.div
-              key={column.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+        <Droppable droppableId="athletes" direction={viewMode === 'grid' ? 'horizontal' : 'vertical'}>
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                  : 'space-y-4'
+              }
             >
-              <div className={`${column.color} p-4`}>
-                <h3 className="font-bold text-gray-900">{column.title}</h3>
-                <p className="text-sm text-gray-600">{column.athletes.length} athletes</p>
-              </div>
-              <Droppable droppableId={column.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`p-4 min-h-[400px] transition-colors ${
-                      snapshot.isDraggingOver ? 'bg-gray-50' : 'bg-white'
-                    }`}
-                  >
-                    <div className="space-y-3">
-                      {column.athletes.map((athlete) => (
-                        <Draggable
-                          key={athlete.id}
-                          draggableId={athlete.id}
-                          index={index}
-                          isDragDisabled={athlete.status === 'archived'}
+              <AnimatePresence>
+                {filteredAthletes.map((athlete, index) => (
+                  <Draggable key={athlete.id} draggableId={athlete.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                          transform: snapshot.isDragging ? provided.draggableProps.style?.transform : 'none'
+                        }}
+                      >
+                        <motion.div
+                          layout
+                          initial={{opacity: 0, scale: 0.8}}
+                          animate={{opacity: 1, scale: 1}}
+                          exit={{opacity: 0, scale: 0.8}}
+                          transition={{duration: 0.2}}
                         >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`transition-transform ${
-                                snapshot.isDragging ? 'rotate-2 scale-105' : ''
-                              }`}
-                            >
-                              <AthleteCard
-                                athlete={athlete}
-                                onClick={handleAthleteClick}
-                                onEdit={handleEditAthlete}
-                                onDelete={handleDeleteAthlete}
-                                onArchive={handleArchiveAthlete}
-                                showArchived={showArchived}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                    </div>
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </motion.div>
-          ))}
-        </div>
+                          <AthleteCard
+                            athlete={athlete}
+                            onClick={handleAthleteClick}
+                            onEdit={handleAthleteEdit}
+                            onDelete={handleDeleteClick}
+                            onArchive={handleArchiveClick}
+                            showArchived={showArchived}
+                          />
+                        </motion.div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </AnimatePresence>
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </DragDropContext>
 
-      <AthleteDetailModal
-        athlete={selectedAthlete}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-      />
+      {/* Empty State */}
+      {filteredAthletes.length === 0 && (
+        <div className="text-center py-12">
+          <SafeIcon icon={FiUsers} className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No athletes found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            {searchTerm || selectedTier !== 'all' || selectedYear !== 'all' || selectedEvent !== 'all'
+              ? "Try adjusting your filters to see more results"
+              : "Get started by adding your first athlete to the roster"}
+          </p>
+          <div className="flex gap-2 justify-center">
+            {(searchTerm || selectedTier !== 'all' || selectedYear !== 'all' || selectedEvent !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2 bg-ballstate-red text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Add First Athlete
+            </button>
+          </div>
+        </div>
+      )}
 
+      {/* Modals */}
       <AddAthleteModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={closeAddModal}
         onAddAthlete={handleAddAthlete}
       />
 
-        <AddAthleteModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onAddAthlete={handleAddAthlete}
-            athlete={editingAthlete}
-            isEditing={true}
-        />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={!!deleteConfirmation}
-        athlete={deleteConfirmation}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteConfirmation(null)}
-        action="delete"
+      <EditAthleteModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdateAthlete={handleAthleteUpdate}
+        athlete={selectedAthlete}
       />
 
-      {/* Archive Confirmation Modal */}
+      <AthleteDetailModal
+        athlete={selectedAthlete}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        onUpdate={handleAthleteUpdate}
+      />
+
       <DeleteConfirmationModal
-        isOpen={!!archiveConfirmation}
-        athlete={archiveConfirmation}
-        onConfirm={confirmArchive}
-        onCancel={() => setArchiveConfirmation(null)}
-        action={archiveConfirmation?.status === 'archived' ? 'restore' : 'archive'}
+        isOpen={deleteConfirmation.isOpen}
+        athlete={deleteConfirmation.athlete}
+        action={deleteConfirmation.action}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
       />
     </div>
   );
